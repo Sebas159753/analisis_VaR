@@ -19,34 +19,39 @@ st.set_page_config(
 def descargar_datos(tickers, start_date, end_date):
     """Descarga precios de cierre ajustados de Yahoo Finance."""
     try:
-        # Descargar datos sin sesión personalizada (yfinance lo maneja automáticamente)
-        data = yf.download(
-            tickers, 
-            start=start_date, 
-            end=end_date, 
-            progress=False
-        )
-        
-        if data.empty:
-            st.error("No se encontraron datos para los activos seleccionados en el rango de fechas.")
-            return pd.DataFrame()
-        
-        # Si hay múltiples tickers, extraer 'Adj Close'
-        if len(tickers) > 1:
-            if 'Adj Close' in data.columns.levels[0]:
-                data = data['Adj Close']
-            elif 'Close' in data.columns.levels[0]:
-                data = data['Close']
+        # Descargar datos ticker por ticker para mayor confiabilidad
+        if len(tickers) == 1:
+            ticker = tickers[0]
+            stock = yf.Ticker(ticker)
+            data = stock.history(start=start_date, end=end_date)
+            
+            if data.empty:
+                st.error(f"No se encontraron datos para {ticker}")
+                return pd.DataFrame()
+            
+            # Usar Close o Adj Close
+            if 'Close' in data.columns:
+                result = data[['Close']].copy()
+                result.columns = [ticker]
+                return result
         else:
-            # Para un solo ticker
-            if 'Adj Close' in data.columns:
-                data = data[['Adj Close']]
-                data.columns = tickers
-            elif 'Close' in data.columns:
-                data = data[['Close']]
-                data.columns = tickers
+            # Para múltiples tickers, usar download
+            data = yf.download(tickers, start=start_date, end=end_date, progress=False)
+            
+            if data.empty:
+                st.error("No se encontraron datos para los activos seleccionados")
+                return pd.DataFrame()
+            
+            # Extraer Close
+            if isinstance(data.columns, pd.MultiIndex):
+                if 'Close' in data.columns.levels[0]:
+                    return data['Close']
+                elif 'Adj Close' in data.columns.levels[0]:
+                    return data['Adj Close']
+            else:
+                return data
         
-        return data
+        return pd.DataFrame()
         
     except Exception as e:
         st.error(f"Error al descargar datos: {e}")
