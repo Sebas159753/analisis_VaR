@@ -155,7 +155,7 @@ start_date = st.sidebar.date_input("Fecha de inicio", pd.to_datetime("2004-01-01
 end_date = st.sidebar.date_input("Fecha de fin", pd.to_datetime("2025-12-31"))
 
 # Selección de Activos
-tickers_default = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA", "META"]
+tickers_default = ["SPY", "VNQ", "BAC", "JPM"]
 tickers = st.sidebar.multiselect("Selecciona los activos", 
                                  ["SPY", "VNQ", "BAC", "JPM", "C", "GS", "XLF", "IYR",
                                   "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA", "META"], 
