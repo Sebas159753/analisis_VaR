@@ -18,28 +18,51 @@ st.set_page_config(
 @st.cache_data
 def descargar_datos(tickers, start_date, end_date):
     """Descarga precios de cierre ajustados de Yahoo Finance."""
-    try:
-        data = yf.download(tickers, start=start_date, end=end_date, progress=False)
-        
-        # Si hay múltiples tickers, 'Adj Close' es un nivel del MultiIndex
-        if len(tickers) > 1:
-            if 'Adj Close' in data.columns.levels[0]:
-                data = data['Adj Close']
+    import time
+    
+    max_intentos = 3
+    for intento in range(max_intentos):
+        try:
+            # Configurar headers para evitar bloqueos
+            data = yf.download(
+                tickers, 
+                start=start_date, 
+                end=end_date, 
+                progress=False,
+                auto_adjust=True,
+                threads=False  # Desactivar threads para evitar problemas
+            )
+            
+            if data.empty:
+                if intento < max_intentos - 1:
+                    time.sleep(2)  # Esperar antes de reintentar
+                    continue
+                else:
+                    st.error("No se pudieron descargar datos después de varios intentos.")
+                    return pd.DataFrame()
+            
+            # Si hay múltiples tickers
+            if len(tickers) > 1:
+                # Con auto_adjust=True, solo existe 'Close'
+                if 'Close' in data.columns.levels[0]:
+                    data = data['Close']
+                else:
+                    data = data
             else:
-                data = data['Close']
-        else:
-            # Para un solo ticker, la estructura es diferente
-            if 'Adj Close' in data.columns:
-                data = data[['Adj Close']]
-                data.columns = tickers
-            elif 'Close' in data.columns:
-                data = data[['Close']]
-                data.columns = tickers
-        
-        return data
-    except Exception as e:
-        st.error(f"Error al descargar datos: {e}")
-        return pd.DataFrame()
+                # Para un solo ticker
+                if 'Close' in data.columns:
+                    data = data[['Close']]
+                    data.columns = tickers
+            
+            return data
+            
+        except Exception as e:
+            if intento < max_intentos - 1:
+                time.sleep(2)
+                continue
+            else:
+                st.error(f"Error al descargar datos después de {max_intentos} intentos: {e}")
+                return pd.DataFrame()
 
 def calcular_rendimientos(precios, tipo="log"):
     """Calcula rendimientos simples o logarítmicos."""
