@@ -243,11 +243,11 @@ with tab2:
     rendimientos = calcular_rendimientos(datos, tipo=tipo_ret_code)
     
     st.subheader("Evolución de Precios")
-    fig_precios = px.line(datos, x=datos.index, y=datos.columns, title="Precios Ajustados de Cierre")
+    fig_precios = px.line(datos, title="Precios Ajustados de Cierre")
     st.plotly_chart(fig_precios, use_container_width=True)
     
     st.subheader("Evolución de Rendimientos")
-    fig_retornos = px.line(rendimientos, x=rendimientos.index, y=rendimientos.columns, title=f"Rendimientos {tipo_retorno}")
+    fig_retornos = px.line(rendimientos, title=f"Rendimientos {tipo_retorno}")
     st.plotly_chart(fig_retornos, use_container_width=True)
     
     with st.expander("Ver tabla de precios"):
