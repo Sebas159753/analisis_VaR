@@ -105,6 +105,9 @@ def calcular_stress_ratio(rendimientos, ventana_sigma=30, ventana_var=250):
 
 def calcular_ewma_volatilidad(rendimientos, lambda_param=0.94):
     """Calcula la volatilidad EWMA (Exponentially Weighted Moving Average)."""
+    if len(rendimientos) == 0:
+        return pd.Series(dtype=float, index=rendimientos.index)
+        
     # Inicializar con la varianza histórica
     var_inicial = rendimientos.var()
     ewma_var = [var_inicial]
@@ -241,6 +244,10 @@ with tab2:
     
     # Calcular rendimientos
     rendimientos = calcular_rendimientos(datos, tipo=tipo_ret_code)
+    
+    if rendimientos.empty:
+        st.warning("⚠️ No hay suficientes datos válidos para calcular rendimientos. Esto suele suceder si uno de los activos seleccionados no cotizaba en el rango de fechas elegido. Por favor, cambia las fechas o elimina activos problemáticos.")
+        st.stop()
     
     st.subheader("Evolución de Precios")
     fig_precios = px.line(datos, title="Precios Ajustados de Cierre")
